@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("lerXML")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f0b42bc94cfa7cac79062fcdfd2751b2f2ee7284")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4730f5915d1ef5bd606166c4ad9521a9bdc49096")]
 [assembly: System.Reflection.AssemblyProductAttribute("lerXML")]
 [assembly: System.Reflection.AssemblyTitleAttribute("lerXML")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
