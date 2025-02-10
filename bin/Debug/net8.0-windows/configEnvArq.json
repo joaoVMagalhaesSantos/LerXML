@@ -1,0 +1,30 @@
+{
+  "email": {
+    "Usuario": "nao-responda@tieteonline.com.br",
+    "Senha": "toll6341",
+    "ServidorSMTP": "smtp.tieteonline.com.br",
+    "Porta": 587,
+    "Destinatario": "joao@tieteonline.com.br",
+    "Copia": "joaovit-01@hotmail.com",
+    "Assunto": "Arquivos fiscais",
+    "Mensagem": "Segue em Anexo os arquivos fiscais juntamente com o relatorio",
+    "Anexo": "C:\\tolsistemas\\contabil"
+  },
+  "caminhosFiscais": {
+    "_cuponsFiscais": [
+      {
+        "caminhoCupom": ""
+      }
+    ],
+    "_notaFiscais": [
+      {
+        "caminhoNota": "\\\\srvaut\\tolsistemas\\nfe\\06914531000176"
+      }
+    ],
+    "_nfces": [
+      {
+        "caminhoNFCE": ""
+      }
+    ]
+  }
+}

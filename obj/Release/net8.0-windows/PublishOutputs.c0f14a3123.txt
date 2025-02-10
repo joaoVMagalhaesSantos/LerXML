@@ -1,0 +1,7 @@
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\lerXML.exe
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\lerXML.dll
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\lerXML.deps.json
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\lerXML.runtimeconfig.json
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\lerXML.pdb
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\DinkToPdf.dll
+C:\trabsharp\lerXML\bin\Release\net8.0-windows\publish\Newtonsoft.Json.dll
