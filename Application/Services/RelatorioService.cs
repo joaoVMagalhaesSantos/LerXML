@@ -108,7 +108,7 @@ namespace lerXML.Application.Services
                         }
                         
                         string html;
-                        string pastaDestino;
+                        //string pastaDestino;
                         string cnpj = "00000000000000";
                         string nserieSAT = "000000";
 
@@ -280,7 +280,7 @@ namespace lerXML.Application.Services
                         }
 
                         string html;
-                        string pastaDestino;
+                        //string pastaDestino;
                         string cnpj = "00000000000000";
                         string nserieSAT = "000000";
 
@@ -765,7 +765,7 @@ namespace lerXML.Application.Services
                 return destinoPasta;
             }
 
-            _rarService.CompactarDiretorios(diretoriosDoMes.ToArray(), rarPath);
+            await _rarService.CompactarDiretorios(diretoriosDoMes.ToArray(), rarPath);
             return destinoPasta;
         }
 
@@ -873,7 +873,7 @@ namespace lerXML.Application.Services
                 return destinoPasta;
             }
 
-            _rarService.CompactarDiretorios(arquivosParaCompactar.ToArray(), rarPath);
+            await _rarService.CompactarDiretorios(arquivosParaCompactar.ToArray(), rarPath);
             return destinoPasta;
         }
     }
