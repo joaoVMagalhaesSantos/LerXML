@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+obj/Release/net8.0-windows/lerXML.AssemblyInfo.cs
+.vs/lerXML/FileContentIndex/85a719e1-67fd-47bf-9b72-f59f5a4925d3.vsidx
+obj/Release/net8.0-windows/lerXML.AssemblyInfoInputs.cache
