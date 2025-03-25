@@ -21,9 +21,10 @@ namespace lerXML
             RarService rarService = new RarService();
             EmailServices emailService = new EmailServices(jsonServices);
             ArquivoService arquivoService = new ArquivoService();
+            XmlServices xmlService = new XmlServices();
 
             // Criar instância do serviço de relatórios
-            RelatorioService relatorioService = new RelatorioService(jsonServices, pdfService, htmlGenerator, rarService, emailService, arquivoService);
+            RelatorioService relatorioService = new RelatorioService(jsonServices, pdfService, htmlGenerator, rarService, emailService, arquivoService, xmlService);
 
             // Passar o serviço para o Form
             global::System.Windows.Forms.Application.Run(new EnvioArquivos(relatorioService));

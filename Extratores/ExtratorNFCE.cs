@@ -29,14 +29,50 @@ namespace lerXML.Extratores
             }
             else
             {
-                // Processar cupons autorizados
-                return _servicesXML.ExtrairNFCeAutorizado(xml, nomeArquivo);
+                if(VerificaAtuorizado(xml))
+                {
+                    // Processar cupons autorizados
+                    return _servicesXML.ExtrairNFCeAutorizado(xml, nomeArquivo);
+                }
+                else
+                {
+                    return _servicesXML.ExtrairNFCeNaoAutorizado(xml, nomeArquivo);   
+                }
             }
         }
 
         private bool VerificarSeCancelado(XDocument xml)
         {
             return xml.Root?.Name.LocalName == "CFeCanc";
+        }
+
+        private bool VerificaAtuorizado(XDocument xml)
+        {
+            try
+            {
+                XNamespace ns = xml.Root.GetDefaultNamespace();
+                string motivo = "";
+
+                foreach (var nfeElement in xml.Descendants(ns + "infProt"))
+                {
+                    motivo = nfeElement.Element(ns + "xMotivo")?.Value;
+                }
+
+                if (motivo == "Autorizado o uso da NF-e")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Erro ao tentar ler o xml: {ex.Message}");
+                return false;
+            }
         }
     }
 }

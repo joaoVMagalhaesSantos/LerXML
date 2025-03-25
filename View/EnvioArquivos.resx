@@ -120,6 +120,19 @@
   <metadata name="button1.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="button1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAB
+        RAAAAUQBTQy1XAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAElSURBVDhPnZM9
+        ikIxFIUDVoJgMbWlrStQwVW4AKezdhnTCOIGdEOD9XT+tDZTqW/OF0400djMgw/uPfcnuUleaJqmir61
+        OJl1LQceRggtMRcT0RdXsTLYaMTIaRUNEMRGXAQCBUfRMdhoxMghNzZJDehKYCjG4lN83FeRbY0YOeTO
+        8wZsDWOcFbXxTTvT8TEm0beYZp7ZH4gfgQPYA8dmIp6J/XjaCHvRtbgT32JksHeOdQW51FAbfsVSdJzQ
+        ExhTfGtTaz37HCw11L40YIWbWGQNFtbSDosGtRG24iy+DPY2W+AxgsXnQ0wrHEy+w/IQLb5c4zvIcW5x
+        jc8PiVXiOI6zbTRi1YdUe8rMmZ5ympkYOeVTzpr872eqoY/b4Zrgze/chD+bk0yIdLrArwAAAABJRU5E
+        rkJggg==
+</value>
+  </data>
   <metadata name="Column1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>

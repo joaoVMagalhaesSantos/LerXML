@@ -149,5 +149,10 @@ namespace lerXML.View
         {
             this.Close();
         }
+
+        private void btnSelecionaCaminho_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

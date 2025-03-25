@@ -403,6 +403,7 @@ namespace lerXML.Application.Services
                             <th>Valor</th>
                         </tr>
             ";
+            decimal totalGeral = 0;
             var cuponsAgrupadosPorDia = cupons
             .GroupBy(cuponsData => cuponsData.data.Value)
             .Select(grupo => new
@@ -414,6 +415,8 @@ namespace lerXML.Application.Services
 
             foreach (var data in cuponsAgrupadosPorDia)
             {
+                totalGeral += data.Total;
+
                 html += $@"
                         <tr>
                             <td>{data.Data:dd/MM/yyyy}</td>
@@ -426,6 +429,9 @@ namespace lerXML.Application.Services
 
             html += $@"
                     </table>
+
+
+                    <h2>Total Geral no periodo: R$ {totalGeral:F2}</h2>
 
                     <div></div>
 
@@ -524,7 +530,7 @@ namespace lerXML.Application.Services
             return html;
         }
 
-        public string GerarRelatorioCuponsNCFE(List<NFCE> cupons, string nomeRelatorio)
+        public async Task<string> GerarRelatorioCuponsNCFE(List<NFCE> cupons, string nomeRelatorio)
         {
             string nomeRel = nomeRelatorio;
 
@@ -588,13 +594,11 @@ namespace lerXML.Application.Services
             })
             .OrderBy(grupox => grupox.Data);
 
-            foreach (var datax in cuponsAgrupadosPorDiax)
-            {
-                html += $@"
+            html += $@"
                     <table>
                         <caption>Cupons Autorizados</caption>
                         <tr>
-                            <th>CF-e</th>
+                            <th>NFC-e</th>
                             <th>CPF/CNPJ</th>
                             <th>Chave de acesso</th>
                             <th>Bruto</th>
@@ -604,6 +608,8 @@ namespace lerXML.Application.Services
                         </tr>
                 ";
 
+            foreach (var datax in cuponsAgrupadosPorDiax)
+            {
                 decimal totalCupom = 0;
                 foreach (var cupom in cupons)
                 {
@@ -622,23 +628,62 @@ namespace lerXML.Application.Services
                                         <td>R$ {cupom.vOutro}</td>
                                         <td>R$ {cupom.vNF}</td>
                                     </tr>";
+
+                            
                         }
                     }
                 }
-                html += $@"
-                        </table>
-                        <h2>{datax.Data:dd/MM/yyyy} Total em Cupons autorizados: R$ {datax.Total:F2}</h2>
-                ";
+
+                /*html += $@"
+                                </table>
+                                <h2>{datax.Data:dd/MM/yyyy} Total em Cupons autorizados: R$ {totalCupom:F2}</h2>
+                            ";*/
+
             }
 
+            html += $@"
+                </table>
+                ";
+
+
+            /*
             html += $@"
                 
                 
                 <table>
+                    <caption>Cupons sem tag de Autorizados</caption>
+                    <tr>
+                        <caption>Cupons não Autorizados</caption>
+                        <th>NFC-e</th>
+                        <th>CPF/CNPJ</th>
+                        <th>Chave de acesso</th>
+                        <th>Valor</th>
+                    </tr>
+                ";
+            decimal totalCupomNaoAutorizado = 0;
+            foreach (var cupom in cupons)
+            {
+                if (cupom.status == "Não Autorizado")
+                {
+                    totalCupomNaoAutorizado += cupom.vNF;
+                    html += $@"
+                        
+                        <tr>
+                            <td>{cupom.nNF}</td>
+                            <td>{cupom.CNPJ}</td>
+                            <td>{cupom.chCFE}</td>
+                            <td>R$ {cupom.vNF}</td>
+                        </tr>";
+                }
+            }
+            */
+
+            html += $@"
+                <table>
                     <caption>Cupons Cancelados</caption>
                     <tr>
                         <caption>Cupons Cancelados</caption>
-                        <th>CF-e</th>
+                        <th>NFC-e</th>
                         <th>CPF/CNPJ</th>
                         <th>Chave de acesso</th>
                         <th>Valor</th>
@@ -665,8 +710,6 @@ namespace lerXML.Application.Services
             html += $@"
                     </table>
                     <h2>Total em Cupons cancelados: R$ {totalCupomCancelado.ToString("#,##0.00", new CultureInfo("pt-BR"))}</h2>
-                    
-
                 ";
 
 
@@ -681,6 +724,9 @@ namespace lerXML.Application.Services
                             <th>Valor</th>
                         </tr>
             ";
+
+            decimal totalGeral = 0;
+
             var cuponsAgrupadosPorDia = cupons
             .GroupBy(cuponsData => cuponsData.dhEmi.Value)
             .Select(grupo => new
@@ -692,6 +738,8 @@ namespace lerXML.Application.Services
 
             foreach (var data in cuponsAgrupadosPorDia)
             {
+                totalGeral += data.Total;
+
                 html += $@"
                         <tr>
                             <td>{data.Data:dd/MM/yyyy}</td>
@@ -704,6 +752,8 @@ namespace lerXML.Application.Services
 
             html += $@"
                     </table>
+                    
+                    <h2>Total Geral no periodo: R$ {totalGeral:F2}</h2>
 
                     <div></div>
 

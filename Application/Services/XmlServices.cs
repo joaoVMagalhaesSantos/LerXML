@@ -1,4 +1,5 @@
 ﻿using lerXML.Classes;
+using lerXML.Extratores;
 using lerXML.Modelos;
 using System;
 using System.Collections.Generic;
@@ -6,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static lerXML.Interface.IExtratorDocumento;
 
 namespace lerXML.Application.Services
 {
-    internal class XmlServices
+    public class XmlServices
     {
         public List<NotaFiscal> ExtrairNotasFiscais(XDocument xml)
         {
@@ -239,6 +241,69 @@ namespace lerXML.Application.Services
             return cupons;
 
         }
+        public List<NFCE> ExtrairNFCeNaoAutorizado(XDocument xml, string chaveCupom)
+        {
+            List<NFCE> cupons = new List<NFCE>();
+
+            if (xml?.Root == null)
+            {
+                throw new ArgumentException("O documento XML está vazio ou malformado.");
+            }
+
+            XNamespace ns = xml.Root.GetDefaultNamespace();
+
+            foreach (var nfeElement in xml.Descendants(ns + "infNFe"))
+            {
+                NFCE cupom = new NFCE
+                {
+                    nNF = nfeElement.Element(ns + "ide")?.Element(ns + "nNF")?.Value,
+                    dhEmi = DateTime.TryParseExact(nfeElement.Element(ns + "ide")?.Element(ns + "dhEmi")?.Value, "yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dhEmiParsed) ? dhEmiParsed.Date : (DateTime?)null,
+                    CNPJ = nfeElement.Element(ns + "emit")?.Element(ns + "CNPJ")?.Value,
+                    chCFE = chaveCupom,
+                    vProd = TryParseDecimal(nfeElement.Element(ns + "total")?.Element(ns + "ICMSTot")?.Element(ns + "vProd")?.Value),
+                    vDesc = TryParseDecimal(nfeElement.Element(ns + "total")?.Element(ns + "ICMSTot")?.Element(ns + "vDesc")?.Value),
+                    vOutro = TryParseDecimal(nfeElement.Element(ns + "total")?.Element(ns + "ICMSTot")?.Element(ns + "vOutro")?.Value),
+                    vNF = TryParseDecimal(nfeElement.Element(ns + "total").Element(ns + "ICMSTot").Element(ns + "vNF").Value),
+                    status = "Não Autorizado",
+                    cfop = new List<string>(),
+                    csosn = new List<string>(),
+                    vProdItem = new List<decimal>()
+                };
+
+                foreach (var nfeElementItem in nfeElement.Descendants(ns + "det"))
+                {
+                    var cfopValue = nfeElementItem.Element(ns + "prod")?.Element(ns + "CFOP")?.Value;
+                    if (!string.IsNullOrEmpty(cfopValue))
+                    {
+                        cupom.cfop.Add(cfopValue);
+                    }
+
+                    var icmsElement = nfeElementItem.Element(ns + "imposto")?.Element(ns + "ICMS");
+                    if (icmsElement != null)
+                    {
+                        var csosnElement = icmsElement.Elements().FirstOrDefault(e => e.Element(ns + "CSOSN") != null);
+                        var csosnValue = csosnElement?.Element(ns + "CSOSN")?.Value;
+                        if (!string.IsNullOrEmpty(csosnValue))
+                        {
+                            cupom.csosn.Add(csosnValue);
+                        }
+                    }
+
+                    var vProdValue = nfeElementItem.Element(ns + "prod")?.Element(ns + "vProd")?.Value;
+                    if (!string.IsNullOrEmpty(vProdValue))
+                    {
+                        if (decimal.TryParse(vProdValue.Replace(".", ","), out var vProdParsed))
+                        {
+                            cupom.vProdItem.Add(vProdParsed);
+                        }
+                    }
+                }
+
+                cupons.Add(cupom);
+            }
+            return cupons;
+
+        }
 
         public List<NFCE> ExtrairNCFeCancelado(XDocument xml, string chaveCupom)
         {
@@ -272,6 +337,100 @@ namespace lerXML.Application.Services
                 return parsedValue;
 
             return 0;
+        }
+
+        public async Task<List<T>> ProcessarXMLs<T>(List<string> xmlFiles, IExtratorDocumento<T> extrator, int indicePasta, int totalPastas)
+        {
+            List<T> documentos = new List<T>();
+            int totalArquivos = xmlFiles.Count;
+            int progressoAtual = (indicePasta * 100) / totalPastas;
+            int progressoPorArquivo = totalArquivos > 0 ? 80 / totalArquivos : 1;
+
+            foreach (string xmlFile in xmlFiles)
+            {
+                try
+                {
+                    if (File.Exists(xmlFile))
+                    {
+                        XDocument xml = XDocument.Load(xmlFile);
+                        string nomeArquivo = Path.GetFileName(xmlFile);
+                        documentos.AddRange(extrator.Extrair(xml, nomeArquivo));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erro ao processar {xmlFile}: {ex.Message}");
+                }
+            }
+            return documentos;
+        }
+
+        public async Task<List<NotaFiscal>> ProcessarNotasFiscais(List<string> xmlFiles, ExtratorNotaFiscal extrator, int indicePasta, int totalPastas)
+        {
+            List<NotaFiscal> notasFiscais = new List<NotaFiscal>();
+            List<XDocument> autorizadasXml = new List<XDocument>();
+            List<XDocument> canceladasXml = new List<XDocument>();
+
+            int totalArquivos = xmlFiles.Count;
+            int progressoAtual = (indicePasta * 100) / totalPastas;
+            int progressoPorArquivo = totalArquivos > 0 ? 80 / totalArquivos : 1;
+
+            // 🔹 Separa os XMLs entre autorizados e cancelados
+            foreach (string xmlFile in xmlFiles)
+            {
+                try
+                {
+                    if (File.Exists(xmlFile))
+                    {
+                        XDocument xml = XDocument.Load(xmlFile);
+                        if (extrator.VerificarSeCancelado(xml))
+                        {
+                            canceladasXml.Add(xml);
+                        }
+                        else if (extrator.VerificarSeAutorizado(xml))
+                        {
+                            autorizadasXml.Add(xml);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erro ao processar {xmlFile}: {ex.Message}");
+                }
+            }
+
+            HashSet<string> chavesAutorizadas = new HashSet<string>(extrator.ExtrairChavesDeAcesso(autorizadasXml));
+
+            foreach (var xml in autorizadasXml)
+            {
+                notasFiscais.AddRange(extrator.Extrair(xml, "", chavesAutorizadas.ToList()));
+            }
+
+            HashSet<string> chavesCanceladas = new HashSet<string>();
+
+            foreach (var xml in canceladasXml)
+            {
+                string chaveNotaCancelada = extrator.ExtrairChaveAcesso(xml);
+                if (!string.IsNullOrEmpty(chaveNotaCancelada))
+                {
+                    chavesCanceladas.Add(chaveNotaCancelada);
+                }
+            }
+
+            notasFiscais = notasFiscais
+            .Where(nfe => !(nfe.status == "Autorizado" && chavesCanceladas.Contains(nfe.chNFe)))
+            .ToList();
+
+            foreach (var xml in canceladasXml)
+            {
+                string chaveNotaCancelada = extrator.ExtrairChaveAcesso(xml);
+
+                if (chavesAutorizadas.Contains(chaveNotaCancelada))
+                {
+                    notasFiscais.AddRange(extrator.Extrair(xml, "", chavesAutorizadas.ToList()));
+                }
+            }
+            return notasFiscais;
         }
 
     }

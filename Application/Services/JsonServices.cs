@@ -73,17 +73,25 @@ namespace lerXML.Application.Services
 
             if (jsonDocument.RootElement.TryGetProperty("email", out JsonElement emailConfig))
             {
-                return new
+                try
                 {
-                    Usuario = emailConfig.GetProperty("Usuario").GetString(),
-                    Senha = emailConfig.GetProperty("Senha").GetString(),
-                    ServidorSMTP = emailConfig.GetProperty("ServidorSMTP").GetString(),
-                    Porta = emailConfig.GetProperty("Porta").GetInt32(),
-                    Destinatario = emailConfig.GetProperty("Destinatario").GetString(),
-                    Copia = emailConfig.GetProperty("Copia").GetString(),
-                    Assunto = emailConfig.GetProperty("Assunto").GetString(),
-                    Mensagem = emailConfig.GetProperty("Mensagem").GetString()
-                };
+                    return new
+                    {
+                        Usuario = emailConfig.GetProperty("Usuario").GetString(),
+                        Senha = emailConfig.GetProperty("Senha").GetString(),
+                        ServidorSMTP = emailConfig.GetProperty("ServidorSMTP").GetString(),
+                        Porta = emailConfig.GetProperty("Porta").GetInt32(),
+                        Destinatario = emailConfig.GetProperty("Destinatario").GetString(),
+                        Copia = emailConfig.GetProperty("Copia").GetString(),
+                        Assunto = emailConfig.GetProperty("Assunto").GetString(),
+                        Mensagem = emailConfig.GetProperty("Mensagem").GetString(),
+                        SslMode = Convert.ToBoolean(emailConfig.GetProperty("SSL").GetString())
+                    };
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show("Erro ao ler o arquivo Json: " + ex.Message);
+                }
             }
 
             throw new FileNotFoundException("Configuração de e-mail não encontrada no JSON.");

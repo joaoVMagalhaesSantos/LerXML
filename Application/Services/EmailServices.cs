@@ -27,7 +27,7 @@ namespace lerXML.Application.Services
                 {
                     Port = emailConfig.Porta,
                     Credentials = new NetworkCredential(emailConfig.Usuario, emailConfig.Senha),
-                    EnableSsl = true
+                    EnableSsl = emailConfig.SslMode
                 };
 
                 MailMessage mail = new MailMessage
@@ -49,7 +49,8 @@ namespace lerXML.Application.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao enviar e-mail: {ex.Message}");
+                MessageBox.Show($"Erro ao enviar Email: {ex.Message}","Alerta",MessageBoxButtons.OK);
+                
             }
         }
 
@@ -68,17 +69,22 @@ namespace lerXML.Application.Services
                 string copia = emailConfig.Copia;
                 string assunto = emailConfig.Assunto;
                 string mensagem = emailConfig.Mensagem;
+                bool sslMode = emailConfig.SslMode;
 
                 try
                 {
                     using (SmtpClient smtpClient = new SmtpClient(servidorSMTP, porta))
                     {
                         smtpClient.Credentials = new NetworkCredential(usuario, senha);
-                        smtpClient.EnableSsl = false;
+                        smtpClient.EnableSsl = sslMode;
 
                         MailMessage mail = new MailMessage();
                         mail.From = new MailAddress(usuario);
                         mail.To.Add(destinatario);
+                        if (!string.IsNullOrEmpty(emailConfig.Copia))
+                        {
+                            mail.CC.Add(emailConfig.Copia);
+                        }
                         mail.Subject = assunto;
                         mail.Body = mensagem;
 
@@ -92,7 +98,7 @@ namespace lerXML.Application.Services
                         }
 
                         await smtpClient.SendMailAsync(mail);
-                        MessageBox.Show("Email enviado com sucesso.", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Email enviado com sucesso. {arquivos.Count()} arquivos anexados", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 catch(Exception exe)

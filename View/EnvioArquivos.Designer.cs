@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             Button button1;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EnvioArquivos));
             dataGridView1 = new DataGridView();
             Column1 = new DataGridViewTextBoxColumn();
             Column2 = new DataGridViewButtonColumn();
@@ -36,18 +37,25 @@
             Column4 = new DataGridViewCheckBoxColumn();
             Column5 = new DataGridViewTextBoxColumn();
             label1 = new Label();
+            comboBox1 = new ComboBox();
             button1 = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
             // button1
             // 
-            button1.Location = new Point(524, 65);
+            button1.BackColor = Color.Transparent;
+            button1.BackgroundImageLayout = ImageLayout.None;
+            button1.FlatAppearance.BorderSize = 0;
+            button1.FlatStyle = FlatStyle.Flat;
+            button1.ForeColor = Color.Transparent;
+            button1.Image = (Image)resources.GetObject("button1.Image");
+            button1.Location = new Point(191, 11);
             button1.Name = "button1";
-            button1.Size = new Size(106, 34);
+            button1.Size = new Size(26, 26);
             button1.TabIndex = 2;
-            button1.Text = "Configuração";
-            button1.UseVisualStyleBackColor = true;
+            button1.UseMnemonic = false;
+            button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
             // 
             // dataGridView1
@@ -57,7 +65,7 @@
             dataGridView1.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { Column1, Column2, Column3, Column4, Column5 });
-            dataGridView1.Location = new Point(0, 0);
+            dataGridView1.Location = new Point(12, 47);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.Size = new Size(489, 340);
             dataGridView1.TabIndex = 0;
@@ -104,18 +112,30 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(507, 6);
+            label1.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Location = new Point(12, 9);
             label1.Name = "label1";
-            label1.Size = new Size(148, 21);
+            label1.Size = new Size(173, 25);
             label1.TabIndex = 1;
             label1.Text = "Envio de Arquivos";
+            // 
+            // comboBox1
+            // 
+            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Items.AddRange(new object[] { "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033", "2034", "2035" });
+            comboBox1.Location = new Point(380, 18);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(121, 23);
+            comboBox1.TabIndex = 3;
+            comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
             // 
             // EnvioArquivos
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(690, 342);
+            ClientSize = new Size(521, 399);
+            Controls.Add(comboBox1);
             Controls.Add(button1);
             Controls.Add(label1);
             Controls.Add(dataGridView1);
@@ -136,5 +156,6 @@
         private DataGridViewButtonColumn Column3;
         private DataGridViewCheckBoxColumn Column4;
         private DataGridViewTextBoxColumn Column5;
+        private ComboBox comboBox1;
     }
 }

@@ -11,13 +11,20 @@ namespace lerXML.Application.Services
     public class RarService
     {
         private string _7zipPath = @"C:\Program Files\7-Zip\7z.exe";
+        private readonly PdfService _pdfService;
+
+        public RarService()
+        {
+            _pdfService = new PdfService();
+        }
+
         public async Task CompactarDiretorios(string[] diretorios, string arquivoSaida)
         {
             try
             {
                 if (diretorios == null || diretorios.Length == 0)
                 {
-                    Console.WriteLine("Nenhum diretório para compactar.");
+                    MessageBox.Show("Nenhum diretório para compactar.");
                     return;
                 }
 
@@ -26,28 +33,36 @@ namespace lerXML.Application.Services
                     throw new FileNotFoundException("O 7-Zip não foi encontrado. Verifique se está instalado.");
                 }
 
-                // Verifica se os diretórios realmente existem antes de processar
+                
                 List<string> diretoriosValidos = diretorios.Where(Directory.Exists).ToList();
                 if (diretoriosValidos.Count == 0)
                 {
-                    Console.WriteLine("Nenhum dos diretórios especificados existe.");
+                    MessageBox.Show("Nenhum dos diretórios especificados existe.");
                     return;
                 }
 
-                // Pegamos o diretório pai mais alto possível para manter a estrutura relativa
+                
                 string raizComum = Path.GetPathRoot(diretoriosValidos[0]); // Obtém a raiz (ex: "Z:\")
-                Console.WriteLine($"📂 Diretório raiz comum: {raizComum}");
+                string caminhotolsistemas = "c:\\tolsistemas\\lerXML";
+                
+                string fileListPath = Path.Combine(caminhotolsistemas, "dirlist.txt");
 
-                // Criar lista de diretórios temporária para o 7-Zip
-                string fileListPath = Path.Combine(Path.GetTempPath(), "dirlist.txt");
                 using (StreamWriter sw = new StreamWriter(fileListPath))
                 {
                     foreach (var diretorio in diretoriosValidos)
                     {
-                        string relativePath = Path.GetRelativePath(raizComum, diretorio);
-                        sw.WriteLine($"\"{relativePath}\""); // Adicionamos o caminho relativo
-                        Console.WriteLine($"✔ Adicionado: {relativePath}");
+                        //string relativePath = Path.GetRelativePath(raizComum, diretorio);
+                        string absolutePath = Path.GetFullPath(diretorio);
+
+                        sw.WriteLine($"\"{absolutePath}\""); // Adicionamos o caminho relativo
+                        
                     }
+                }
+
+                if (!File.Exists(fileListPath))
+                {
+                    MessageBox.Show($"⚠ Erro: O arquivo de lista não foi encontrado: {fileListPath}");
+                    return;
                 }
 
                 // Argumentos do 7-Zip:
@@ -72,7 +87,7 @@ namespace lerXML.Application.Services
 
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Console.WriteLine($"⚠ Erro do 7-Zip: {error}");
+                        MessageBox.Show($"⚠ Erro do 7-Zip: {error}");
                     }
                     else
                     {
@@ -88,8 +103,216 @@ namespace lerXML.Application.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao compactar diretórios: {ex.Message}");
+                MessageBox.Show($"Erro ao compactar diretórios: {ex.Message}","Alerta",MessageBoxButtons.OK);
             }
         }
+
+        public async Task<string> CompactarArquivos(string basePath, int year, int month, string tipoDocumento, string cnpj, string nserieSAT)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                Console.WriteLine("Caminho para compactação está vazio. Pulando...");
+                return "";
+            }
+
+            string folderName = $"{year}{month:00}";
+            string destinoPasta = Path.Combine(@"C:\tolsistemas\contabil", folderName);
+
+            if (!Directory.Exists(destinoPasta))
+            {
+                Directory.CreateDirectory(destinoPasta);
+            }
+
+            string rarPath = Path.Combine(destinoPasta, _pdfService.GerarNomeArquivo(tipoDocumento, year, month, cnpj, nserieSAT, false));
+
+            List<string> diretoriosDoMes = new List<string>();
+
+            if (tipoDocumento == "NFe")
+            {
+                string cnpjFolder = Path.GetFileName(basePath);
+                string caminhoNotas = Path.Combine(basePath, folderName, "NFe");
+
+                string baseEventoPath = Directory.GetParent(basePath)?.FullName ?? "";
+                string caminhoEventos = Path.Combine(baseEventoPath, "evento", cnpjFolder, "NFe", folderName, "Evento", "Cancelamento");
+
+                if (Directory.Exists(caminhoNotas))
+                {
+                    diretoriosDoMes.Add(caminhoNotas);
+                }
+                else
+                {
+                    MessageBox.Show($"⚠ Pasta de notas autorizadas não encontrada: {caminhoNotas}");
+                }
+
+                if (Directory.Exists(caminhoEventos))
+                {
+                    diretoriosDoMes.Add(caminhoEventos);
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de eventos (canceladas) não encontrada: {caminhoEventos}");
+                }
+            }
+            else if (tipoDocumento == "NFCe")
+            {
+                string cnpjFolder = Path.GetFileName(basePath);
+                string caminhoNotas = Path.Combine(basePath, folderName, "NFCe");
+
+                string baseEventoPath = Directory.GetParent(basePath)?.FullName ?? "";
+                string caminhoEventos = Path.Combine(baseEventoPath, "evento", cnpjFolder, "NFCe", folderName, "Evento", "Cancelamento");
+
+                if (Directory.Exists(caminhoNotas))
+                {
+                    diretoriosDoMes.Add(caminhoNotas);
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de NFCe autorizadas não encontrada: {caminhoNotas}", "Alerta", MessageBoxButtons.OK);
+                }
+
+                if (Directory.Exists(caminhoEventos))
+                {
+                    diretoriosDoMes.Add(caminhoEventos);
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de eventos (canceladas) não encontrada: {caminhoEventos}", "Alerta", MessageBoxButtons.OK);
+                }
+            }
+            else
+            {
+                string[] subPastas = { "Vendas", "Cancelamentos" };
+
+                foreach (string subPasta in subPastas)
+                {
+                    string caminhoSubPasta = Path.Combine(basePath, subPasta, cnpj, folderName);
+
+                    if (Directory.Exists(caminhoSubPasta))
+                    {
+                        diretoriosDoMes.Add(caminhoSubPasta);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠ Pasta {subPasta} não encontrada: {caminhoSubPasta}");
+                    }
+                }
+            }
+            if (diretoriosDoMes.Count == 0)
+            {
+                MessageBox.Show($"Nenhum arquivo encontrado para compactar no mês {folderName}.");
+                return destinoPasta;
+            }
+
+            CompactarDiretorios(diretoriosDoMes.ToArray(), rarPath);
+            return destinoPasta;
+        }
+
+        /*private async Task<string> CompactarArquivosPorPeriodo(string basePath, int year, int month, string tipoDocumento, string cnpj, string nserieSAT, DateTime dataInicial, DateTime dataFinal)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                Console.WriteLine("Caminho para compactação está vazio. Pulando...");
+                return "";
+            }
+
+            string folderName = $"{year}{month:00}";
+            string destinoPasta = Path.Combine(@"C:\tolsistemas\contabil", folderName);
+
+            if (!Directory.Exists(destinoPasta))
+            {
+                Directory.CreateDirectory(destinoPasta);
+            }
+
+            int totalArquivos = 0;
+
+            string rarPath = Path.Combine(destinoPasta, _pdfService.GerarNomeArquivo(tipoDocumento, year, month, cnpj, nserieSAT, false));
+
+            bool isNotaFiscal = Directory.Exists(Path.Combine(basePath, "NFe"));
+            bool isNFCe = Directory.Exists(Path.Combine(basePath, "NFCe"));
+
+            List<string> arquivosParaCompactar = new List<string>();
+
+            if (isNotaFiscal)
+            {
+                string cnpjFolder = Path.GetFileName(basePath);
+                string caminhoNotas = Path.Combine(basePath, "NFe", folderName, "NFE");
+
+                string baseEventoPath = Directory.GetParent(basePath)?.FullName ?? "";
+                string caminhoEventos = Path.Combine(baseEventoPath, "evento", cnpjFolder, "NFe", folderName, "Evento", "Cancelamento");
+
+                if (Directory.Exists(caminhoNotas))
+                {
+                    arquivosParaCompactar.AddRange(FiltrarArquivosPorPeriodo(caminhoNotas, dataInicial, dataFinal, ref totalArquivos));
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de notas autorizadas não encontrada: {caminhoNotas}");
+                }
+
+                // 🔹 Adiciona a pasta de eventos (cancelamentos), se existir
+                if (Directory.Exists(caminhoEventos))
+                {
+                    arquivosParaCompactar.AddRange(FiltrarArquivosPorPeriodo(caminhoEventos, dataInicial, dataFinal, ref totalArquivos));
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de eventos (canceladas) não encontrada: {caminhoEventos}");
+                }
+            }
+            else if (isNFCe)
+            {
+                string cnpjFolder = Path.GetFileName(basePath);
+                string caminhoNotas = Path.Combine(basePath, "NFCe", folderName, "NFCe");
+
+                string baseEventoPath = Directory.GetParent(basePath)?.FullName ?? "";
+                string caminhoEventos = Path.Combine(baseEventoPath, "evento", cnpjFolder, "NFCe", folderName, "Evento", "Cancelamento");
+
+                // 🔹 Adiciona a pasta de notas autorizadas, se existir
+                if (Directory.Exists(caminhoNotas))
+                {
+                    arquivosParaCompactar.AddRange(FiltrarArquivosPorPeriodo(caminhoNotas, dataInicial, dataFinal, ref totalArquivos));
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de NFCe autorizadas não encontrada: {caminhoNotas}");
+                }
+
+                // 🔹 Adiciona a pasta de eventos (canceladas), se existir
+                if (Directory.Exists(caminhoEventos))
+                {
+                    arquivosParaCompactar.AddRange(FiltrarArquivosPorPeriodo(caminhoEventos, dataInicial, dataFinal, ref totalArquivos));
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ Pasta de eventos (canceladas) não encontrada: {caminhoEventos}");
+                }
+            }
+            else
+            {
+                string[] subPastas = { "Vendas", "Cancelamentos" };
+
+                foreach (string subPasta in subPastas)
+                {
+                    string caminhoSubPasta = Path.Combine(basePath, subPasta, cnpj, folderName);
+
+                    if (Directory.Exists(caminhoSubPasta))
+                    {
+                        arquivosParaCompactar.AddRange(FiltrarArquivosPorPeriodo(caminhoSubPasta, dataInicial, dataFinal, ref totalArquivos));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠ Pasta {subPasta} não encontrada: {caminhoSubPasta}");
+                    }
+                }
+            }
+            if (arquivosParaCompactar.Count == 0)
+            {
+                Console.WriteLine($"Nenhum arquivo encontrado para compactar no mês {folderName}.");
+                return destinoPasta;
+            }
+
+            await _rarService.CompactarDiretorios(arquivosParaCompactar.ToArray(), rarPath);
+            return destinoPasta;
+        }*/
     }
 }

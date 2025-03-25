@@ -17,6 +17,7 @@ namespace lerXML.Modelos
         public string Assunto { get; set; }
         public string Mensagem { get; set; }
         public string Anexo { get; set; }
+        public bool SslMode { get; set; }
 
     }
 }

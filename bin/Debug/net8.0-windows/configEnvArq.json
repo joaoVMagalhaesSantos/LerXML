@@ -8,6 +8,7 @@
     "Copia": "joaovit-01@hotmail.com",
     "Assunto": "Arquivos fiscais",
     "Mensagem": "Segue em Anexo os arquivos fiscais juntamente com o relatorio",
+    "SSL":  "False",
     "Anexo": "C:\\tolsistemas\\contabil"
   },
   "caminhosFiscais": {
@@ -18,13 +19,13 @@
     ],
     "_notaFiscais": [
       {
-        "caminhoNota": "\\\\srvaut\\tolsistemas\\nfe\\06914531000176"
+        "caminhoNota": ""
       }
     ],
     "_nfces": [
       {
-        "caminhoNFCE": ""
-      }
+        "caminhoNFCE": "\\\\sistemas\\tolsistemas\\nfe\\57815614000149"
+      },
     ]
   }
 }

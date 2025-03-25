@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,20 +24,20 @@ namespace lerXML.Application.Services
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(caminho)) // 🔹 Se estiver vazio, retorna verdadeiro para seguir o fluxo
+                if (string.IsNullOrWhiteSpace(caminho))
                     return true;
 
                 if (Directory.Exists(caminho))
                 {
-                    Directory.GetFiles(caminho); // Tenta acessar os arquivos para testar a conexão
+                    Directory.GetFiles(caminho); 
                     return true;
                 }
             }
-            catch (IOException) // Exceção comum para redes inacessíveis
+            catch (IOException) 
             {
                 return false;
             }
-            catch (UnauthorizedAccessException) // Caso não tenha permissão
+            catch (UnauthorizedAccessException) 
             {
                 return false;
             }
@@ -65,94 +66,230 @@ namespace lerXML.Application.Services
             }
         }
 
-        /*
-        public string SelecionarCaminho()
+        public void AbrirArquivosPDF(string pastaArquivos)
         {
-            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            if (!Directory.Exists(pastaArquivos))
             {
-                dialog.ShowNewFolderButton = true;
-
-                return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : string.Empty;
-            }
-        }
-        public DataTable ListaArquivos(DataTable tabela, string caminho)
-        {
-            var diretorios = Directory.GetDirectories(caminho);
-
-            foreach (var dir in diretorios)
-            {
-                tabela.Rows.Add(new DirectoryInfo(dir).Name, "Pasta", "-");
+                Console.WriteLine("A pasta especificada não existe.");
+                return;
             }
 
-            var arquivos = Directory.GetFiles(caminho);
+            string[] arquivos = Directory.GetFiles(pastaArquivos, "*.pdf"); // Filtro direto para PDF
 
-            foreach (var arq in arquivos)
+            foreach (string arquivo in arquivos)
             {
-                FileInfo file = new FileInfo(arq);
-                tabela.Rows.Add(file.Name, file.Extension, file.Length / 1024);
-            }
-
-            return tabela;
-        }
-        public DataTable ListaCaminhos(DataTable tabela, string caminho)
-        {
-            var diretorios = Directory.GetDirectories(caminho);
-
-            foreach (var dir in diretorios)
-            {
-                tabela.Rows.Add(new DirectoryInfo(dir).Name, "Pasta", "-");
-            }
-
-            var arquivos = Directory.GetDirectories(caminho);
-
-            foreach (var arq in arquivos)
-            {
-                tabela.Rows.Add(arq);
-            }
-
-            return tabela;
-        }
-        public List<T> LerDocumentos<T>(string caminhoAutorizado, string caminhoCancelado, DataGridView dataGrid, IExtratorDocumento<T> extrator)
-        {
-            List<T> documentos = new List<T>();
-
-            for (int i = 0; i < dataGrid.Rows.Count - 1; i++)
-            {
-                var row = dataGrid.Rows[i];
-
-                string nomeArquivo = row.Cells[0].Value?.ToString();
-
-                if (string.IsNullOrEmpty(nomeArquivo))
-                {
-                    MessageBox.Show("O nome do arquivo está vazio ou nulo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    continue;
-                }
-
-                string caminhoArquivoAutorizado = Path.Combine(caminhoAutorizado, nomeArquivo);
-                string caminhoArquivoCancelado = Path.Combine(caminhoCancelado, nomeArquivo);
                 try
                 {
-                    if (File.Exists(caminhoArquivoAutorizado))
+                    Process.Start(new ProcessStartInfo
                     {
-                        XDocument xml = XDocument.Load(caminhoArquivoAutorizado);
-                        documentos.AddRange(extrator.Extrair(xml, nomeArquivo));
-                    }
-                    if (File.Exists(caminhoArquivoCancelado))
-                    {
-                        XDocument xml = XDocument.Load(caminhoArquivoCancelado);
-                        documentos.AddRange(extrator.Extrair(xml, nomeArquivo));
-                    }
+                        FileName = arquivo,
+                        UseShellExecute = true
+                    });
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erro ao processar {nomeArquivo}: {ex.Message}");
+                    MessageBox.Show($"Erro ao abrir o arquivo {arquivo}: {ex.Message}", "Alerta", MessageBoxButtons.OK);
+                }
+            }
+        }
+
+        public List<string> BuscarArquivosXMLPorPeriodo(string basePath, string folderName, string[] subFolders, int indicePasta, int totalPastas, DateTime dataInicial, DateTime dataFinal)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                Console.WriteLine("BasePath está vazio. Nenhum XML será buscado.");
+                return new List<string>();
+            }
+
+            List<string> xmlFilesDoCaminho = new List<string>();
+            int totalArquivos = 0;
+
+            if (subFolders.Length == 4 && subFolders.Contains("NFe"))
+            {
+                string cnpj = Path.GetFileName(basePath);
+                string nfeFolderPath = Path.Combine(basePath, "NFe", folderName, "NFE");
+
+                string baseEventoPath = Directory.GetParent(basePath).FullName;
+                string eventoFolderPath = Path.Combine(baseEventoPath, "evento", cnpj, "NFe", folderName, "Evento", "Cancelamento");
+
+                xmlFilesDoCaminho.AddRange(FiltrarArquivosPorPeriodo(nfeFolderPath, dataInicial, dataFinal, ref totalArquivos));
+                xmlFilesDoCaminho.AddRange(FiltrarArquivosPorPeriodo(eventoFolderPath, dataInicial, dataFinal, ref totalArquivos));
+            }
+            else if (subFolders.Length == 4 && subFolders.Contains("NFCe"))
+            {
+                string cnpj = Path.GetFileName(basePath);
+                string nfceFolderPath = Path.Combine(basePath, "NFCe", folderName, "NFCE");
+
+                string baseEventoPath = Directory.GetParent(basePath).FullName;
+                string eventoFolderPath = Path.Combine(baseEventoPath, "evento", cnpj, "NFCe", folderName, "Evento", "Cancelamento");
+
+                xmlFilesDoCaminho.AddRange(FiltrarArquivosPorPeriodo(nfceFolderPath, dataInicial, dataFinal, ref totalArquivos));
+                xmlFilesDoCaminho.AddRange(FiltrarArquivosPorPeriodo(eventoFolderPath, dataInicial, dataFinal, ref totalArquivos));
+            }
+            else
+            {
+                foreach (string subFolder in subFolders)
+                {
+                    string subFolderPath = Path.Combine(basePath, subFolder);
+
+                    if (!Directory.Exists(subFolderPath))
+                    {
+                        Console.WriteLine($"⚠ Subpasta não encontrada: {subFolderPath} (Ignorando)");
+                        continue;
+                    }
+
+                    string[] cnpjFolders = Directory.GetDirectories(subFolderPath);
+                    foreach (string cnpjFolder in cnpjFolders)
+                    {
+                        string monthFolderPath = Path.Combine(cnpjFolder, folderName);
+
+                        if (!Directory.Exists(monthFolderPath))
+                        {
+                            Console.WriteLine($"⚠ Pasta do mês '{folderName}' não encontrada em: {cnpjFolder} (Ignorando)");
+                            continue;
+                        }
+
+                        xmlFilesDoCaminho.AddRange(FiltrarArquivosPorPeriodo(monthFolderPath, dataInicial, dataFinal, ref totalArquivos));
+                    }
                 }
             }
 
-            return documentos;
+            Console.WriteLine($"Total de arquivos filtrados por período ({dataInicial:dd/MM/yyyy} - {dataFinal:dd/MM/yyyy}): {totalArquivos}");
+            return xmlFilesDoCaminho;
         }
-        */
 
+        private List<string> FiltrarArquivosPorPeriodo(string caminho, DateTime dataInicial, DateTime dataFinal, ref int totalArquivos)
+        {
+            List<string> arquivosFiltrados = new List<string>();
+
+            if (Directory.Exists(caminho))
+            {
+                string[] arquivos = Directory.GetFiles(caminho, "*.xml");
+
+                foreach (string arquivo in arquivos)
+                {
+                    DateTime dataCriacao = File.GetLastWriteTime(arquivo);
+
+                    if (dataCriacao.Date >= dataInicial && dataCriacao.Date <= dataFinal)
+                    {
+                        arquivosFiltrados.Add(arquivo);
+                        totalArquivos++;
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Pasta não encontrada: {caminho}");
+            }
+
+            return arquivosFiltrados;
+        }
+
+        public List<string> BuscarArquivosXML(string basePath, string folderName, string[] subFolders, int indicePasta, int totalPastas)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                Console.WriteLine("BasePath está vazio. Nenhum XML será buscado.");
+                return new List<string>(); // Retorna uma lista vazia ao invés de quebrar
+            }
+
+            List<string> xmlFilesDoCaminho = new List<string>();
+            int totalArquivos = 0;
+
+            if (subFolders.Length == 4 && subFolders.Contains("NFe"))
+            {
+                string ultimaPasta = Path.GetDirectoryName(basePath);
+                string cnpj = Path.GetFileName(ultimaPasta);
+
+                string nfeFolderPath = Path.Combine(basePath, folderName, "NFe");
+
+                string baseEventoPath = Directory.GetParent(ultimaPasta).FullName;
+                string eventoFolderPath = Path.Combine(baseEventoPath, "evento", cnpj, "NFe", folderName, "Evento", "Cancelamento");
+
+                if (Directory.Exists(nfeFolderPath))
+                {
+                    string[] arquivos = Directory.GetFiles(nfeFolderPath, "*.xml");
+                    xmlFilesDoCaminho.AddRange(arquivos);
+                    totalArquivos += arquivos.Length;
+
+                }
+                else
+                {
+                    Console.WriteLine($"Pasta de autorizados não encontrada: {nfeFolderPath}");
+                }
+
+                if (Directory.Exists(eventoFolderPath))
+                {
+                    string[] arquivosEvento = Directory.GetFiles(eventoFolderPath, "*.xml");
+                    xmlFilesDoCaminho.AddRange(arquivosEvento);
+                    totalArquivos += arquivosEvento.Length;
+                }
+                else
+                {
+                    Console.WriteLine($"Pasta de eventos não encontrada: {eventoFolderPath}");
+                }
+            }
+            else if (subFolders.Length == 4 && subFolders.Contains("NFCe"))
+            {
+                string cnpj = Path.GetFileName(basePath);
+                string nfceFolderPath = Path.Combine(basePath, folderName, "NFCe");
+
+                string baseEventoPath = Directory.GetParent(basePath).FullName;
+                string eventoFolderPath = Path.Combine(baseEventoPath, "evento", cnpj, "NFCe", folderName, "Evento", "Cancelamento");
+
+                if (Directory.Exists(nfceFolderPath))
+                {
+                    string[] arquivos = Directory.GetFiles(nfceFolderPath, "*.xml");
+                    xmlFilesDoCaminho.AddRange(arquivos);
+                    totalArquivos += arquivos.Length;
+
+                }
+                else
+                {
+                    Console.WriteLine($"Pasta de autorizados não encontrada: {nfceFolderPath}");
+                }
+
+                if (Directory.Exists(eventoFolderPath))
+                {
+                    string[] arquivosEvento = Directory.GetFiles(eventoFolderPath, "*.xml");
+                    xmlFilesDoCaminho.AddRange(arquivosEvento);
+                    totalArquivos += arquivosEvento.Length;
+                }
+                else
+                {
+                    Console.WriteLine($"Pasta de eventos não encontrada: {eventoFolderPath}");
+                }
+            }
+            else
+            {
+                foreach (string subFolder in subFolders)
+                {
+                    string subFolderPath = Path.Combine(basePath, subFolder);
+
+                    if (!Directory.Exists(subFolderPath))
+                    {
+                        Console.WriteLine($"⚠ Subpasta não encontrada: {subFolderPath} (Ignorando)");
+                        continue;
+                    }
+
+                    string[] cnpjFolders = Directory.GetDirectories(subFolderPath);
+                    foreach (string cnpjFolder in cnpjFolders)
+                    {
+                        string monthFolderPath = Path.Combine(cnpjFolder, folderName);
+
+                        if (!Directory.Exists(monthFolderPath))
+                        {
+                            Console.WriteLine($"⚠ Pasta do mês '{folderName}' não encontrada em: {cnpjFolder} (Ignorando)");
+                            continue;
+                        }
+
+                        string[] arquivos = Directory.GetFiles(monthFolderPath, "*.xml");
+                        xmlFilesDoCaminho.AddRange(arquivos);
+                        totalArquivos += arquivos.Length;
+                    }
+                }
+            }
+            return xmlFilesDoCaminho;
+        }
     }
-
 }

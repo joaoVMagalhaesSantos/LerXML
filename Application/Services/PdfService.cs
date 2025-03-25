@@ -9,13 +9,10 @@ namespace lerXML.Application.Services
 {
     public class PdfService
     {
-        private readonly ArquivoService _arquivoService;
         private readonly SynchronizedConverter _converter = new SynchronizedConverter(new PdfTools());
-
 
         public PdfService()
         {
-            _arquivoService = new ArquivoService();
             _converter = new SynchronizedConverter(new PdfTools());
         }
 
@@ -33,11 +30,9 @@ namespace lerXML.Application.Services
                 string nomeArquivoPDF = GerarNomeArquivo(tipoDocumento, year, month, cnpj, nserieSAT, true);
                 string pdfPath = Path.Combine(destinoPasta, nomeArquivoPDF);
 
-                // 🔹 Garante que o _converter não é null
                 if (_converter == null)
                 {
-                    Console.WriteLine("Erro: _converter não foi inicializado.");
-                    //_converter = new SynchronizedConverter(new PdfTools());
+                    Console.WriteLine("Erro: _converter não foi inicializado.");                    
                 }
 
                 var doc = new HtmlToPdfDocument()
@@ -47,7 +42,7 @@ namespace lerXML.Application.Services
                         ColorMode = ColorMode.Color,
                         Orientation = DinkToPdf.Orientation.Landscape,
                         PaperSize = PaperKind.A4,
-                        Out = pdfPath // 🔹 Define o caminho do PDF diretamente
+                        Out = pdfPath 
                     },
                     Objects =
             {
@@ -101,6 +96,5 @@ namespace lerXML.Application.Services
             return nomeArquivo;
         }
 
-        
     }
 }

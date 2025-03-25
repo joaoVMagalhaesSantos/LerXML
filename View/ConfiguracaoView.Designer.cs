@@ -170,6 +170,7 @@
             btnSelecionaCaminho.TabIndex = 11;
             btnSelecionaCaminho.Text = "...";
             btnSelecionaCaminho.UseVisualStyleBackColor = true;
+            btnSelecionaCaminho.Click += btnSelecionaCaminho_Click;
             // 
             // txtUsuario
             // 
